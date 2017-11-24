@@ -1,0 +1,45 @@
+<!Doctype HTML>
+
+<head>
+  <script src="https://vuejs.org/js/vue.js"> </script>
+</head>  
+
+<body>
+  <div id="app">
+    <p>Code:</p>
+    <textarea style="width: 100%;">{{code}}</textarea>
+    <div v-if="stage == 0">
+      <p>Loading tokens...</p>
+    </div>
+    <div v-if="stage == 1">
+      {{response}}
+    </div>
+  </div>
+</body>
+
+<script>
+  var vm = new Vue({
+    el: '#app',
+    computed: {
+      code: function() {
+        return window.location.search.split('=')[1].split('&')[0]
+      },
+    },
+    methods: {
+      refresh: function() {
+        fetch("https://www.bungie.net/platform/app/oauth/token/", {
+          body: "grant_type=authorization_code&code=" + this.code + "&client_secret=" + localStorage.getItem('secret') + "&client_id=" + localStorage.getItem('id'),
+          headers: {
+              "Content-Type": "application/x-www-form-urlencoded"
+          },
+          method: "post",
+        });
+        return ''
+      }
+    },
+    data: {
+      stage: 0,
+      response: {}
+    }
+  })
+</script>
