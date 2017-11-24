@@ -13,12 +13,26 @@
     </div>
     <div v-if="stage >= 1">
       <p>Token response</p>
-      <textarea style="width: 100%; min-height: 300px;">{{response}}</textarea>
+      <textarea style="width: 100%; min-height: 200px;">{{response}}</textarea>
       <button @click="refresh">refresh</button>
       <p>refresh_token</p>
       <textarea style="width: 100%;">{{response.refresh_token}}</textarea>
       <p>access_token</p>
       <textarea style="width: 100%;">{{response.access_token}}</textarea>
+      <button @click="getMembershipData">show membership data</button>
+    </div>
+    <div v-if="stage >= 2">
+      <p>User.UserMembershipData</p>
+      <textarea style="width: 100%; min-height: 200px;">{{user}}</textarea>
+      <button @click="getProfile">show destiny 2 profile</button>
+      <div v-for="(destinyMembership, index) in user.destinyMemberships" :key="destinyMembership.membershipId">
+        <p>Destiny Account: {{user.destinyMemberships[index].displayName}}</p>
+        <textarea style="width: 100%; min-height: 200px;">{{user.destinyMemberships[index]}}</textarea>
+      </div>
+    </div>
+    <div v-if="stage >= 3">
+      <p>Destiny2.GetProfile</p>
+      <textarea style="width: 100%; min-height: 200px;">{{profile}}</textarea>
     </div>
   </div>
 </body>
@@ -43,7 +57,7 @@
           if(response.ok) {
             return response.json()
           } else {
-            return response.body
+            return {'error': response.status }
           }
         }).then(function(json) {
           vm.response = json;
@@ -66,18 +80,43 @@
           if(response.ok) {
             return response.json()
           } else {
-            return response.body
+            return {'error': response.status }
           }
         }).then(function(json) {
           vm.response = json;
         }).catch(function() {
           vm.response = {'error': 'unable to fetch'}
         });
+      },
+      getMembershipData: function() {
+        fetch("https://www.bungie.net/platform/User/GetMembershipsForCurrentUser/", {
+          headers: {
+              "X-API-Key": localStorage.getItem('key'),
+              "Authorization": this.response.token_type + " " + this.response.access_token
+          },
+          method: "get",
+        }).then(function(response) {
+          if(response.ok) {
+            return response.json()
+          } else {
+            return {'error': response.status }
+          }
+        }).then(function(json) {
+          vm.user = json;
+          stage++;
+        }).catch(function() {
+          vm.user = {'error': 'unable to fetch'}
+        });
+      },
+      getProfile: function() {
+
       }
     },
     data: {
       stage: 0,
-      response: {'error': "check the console for details"}
+      response: {'error': "check the console for details"},
+      user: {},
+      profile: {},
     },
     created: function() {
       this.load();
