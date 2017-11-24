@@ -12,7 +12,9 @@
       <p>Loading tokens...</p>
     </div>
     <div v-if="stage == 1">
-      {{response}}
+      <p>Token response</p>
+      <textarea style="width: 100%; min-height: 400px;">{{response}}</textarea>
+      <button @click="refresh">refresh</button>
     </div>
   </div>
 </body>
@@ -26,20 +28,52 @@
       },
     },
     methods: {
-      refresh: function() {
+      load: function() {
         fetch("https://www.bungie.net/platform/app/oauth/token/", {
           body: "grant_type=authorization_code&code=" + this.code + "&client_secret=" + localStorage.getItem('secret') + "&client_id=" + localStorage.getItem('id'),
           headers: {
               "Content-Type": "application/x-www-form-urlencoded"
           },
           method: "post",
+        }).then(function(response) {
+          if(response.ok) {
+            return response.json()
+          } else {
+            return response.body
+          }
+        }).then(function(json) {
+          vm.response = json;
+          vm.stage++;
+        }).catch(function() {
+          vm.response = {'error': 'unable to fetch'}
         });
-        return ''
+      },
+      refresh: function() {
+        fetch("https://www.bungie.net/platform/app/oauth/token/", {
+          body: "grant_type=refresh_token&refresh_token=" + this.response.refresh_token + "&client_secret=" + localStorage.getItem('secret') + "&client_id=" + localStorage.getItem('id'),
+          headers: {
+              "Content-Type": "application/x-www-form-urlencoded"
+          },
+          method: "post",
+        }).then(function(response) {
+          if(response.ok) {
+            return response.json()
+          } else {
+            return response.body
+          }
+        }).then(function(json) {
+          vm.response = json;
+        }).catch(function() {
+          vm.response = {'error': 'unable to fetch'}
+        });
       }
     },
     data: {
       stage: 0,
       response: {}
+    },
+    created: function() {
+      this.load();
     }
   })
 </script>
