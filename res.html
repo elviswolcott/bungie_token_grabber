@@ -6,15 +6,19 @@
 
 <body>
   <div id="app">
-    <p>Code:</p>
+    <p>code</p>
     <textarea style="width: 100%;">{{code}}</textarea>
     <div v-if="stage == 0">
       <p>Loading tokens...</p>
     </div>
-    <div v-if="stage == 1">
+    <div v-if="stage >= 1">
       <p>Token response</p>
       <textarea style="width: 100%; min-height: 400px;">{{response}}</textarea>
       <button @click="refresh">refresh</button>
+      <p>refresh_token</p>
+      <textarea style="width: 100%;">{{response.refresh_token}}</textarea>
+      <p>access_token</p>
+      <textarea style="width: 100%;">{{response.access_token}}</textarea>
     </div>
   </div>
 </body>
@@ -43,6 +47,9 @@
           }
         }).then(function(json) {
           vm.response = json;
+          if(json.refresh_token) {
+            setInterval(vm.refresh, (json.expires_in * 1000));
+          }
           vm.stage++;
         }).catch(function() {
           vm.response = {'error': 'unable to fetch'}
@@ -70,7 +77,7 @@
     },
     data: {
       stage: 0,
-      response: {}
+      response: {'error': "check the console for details"}
     },
     created: function() {
       this.load();
