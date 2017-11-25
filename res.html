@@ -7,29 +7,29 @@
 <body>
   <div id="app">
     <p>code</p>
-    <textarea style="width: 100%;">{{code}}</textarea>
+    <textarea readonlystyle="width: 100%;">{{code}}</textarea>
     <div v-if="stage == 0">
       <p>Loading tokens...</p>
     </div>
     <div v-if="stage >= 1">
       <p>Token response</p>
-      <textarea style="width: 100%; min-height: 200px;">{{response}}</textarea>
+      <textarea readonlystyle="width: 100%; min-height: 200px;">{{response}}</textarea>
       <button @click="refresh">refresh</button>
       <p>refresh_token</p>
-      <textarea style="width: 100%;">{{response.refresh_token}}</textarea>
+      <textarea readonlystyle="width: 100%;">{{response.refresh_token}}</textarea>
       <p>access_token</p>
-      <textarea style="width: 100%;">{{response.access_token}}</textarea>
+      <textarea readonlystyle="width: 100%;">{{response.access_token}}</textarea>
       <button @click="getMembershipData">show membership data</button>
     </div>
     <div v-if="stage >= 2">
       <p>User.UserMembershipData</p>
-      <textarea style="width: 100%; min-height: 200px;">{{user}}</textarea>
+      <textarea readonlystyle="width: 100%; min-height: 200px;">{{user}}</textarea>
       <div v-for="(destinyMembership, index) in user.destinyMemberships" :key="destinyMembership.membershipId">
         <p>Destiny Account: {{destinyMembership.displayName}}</p>
-        <textarea style="width: 100%; min-height: 200px;">{{destinyMembership}}</textarea>
+        <textarea readonlystyle="width: 100%; min-height: 200px;">{{destinyMembership}}</textarea>
         <p>Destiny2.GetProfile</p>
         <p style="display: none" v-if="!profiles[destinyMembership.membershipType].profileInventory">{{getProfile(destinyMembership.membershipType, destinyMembership.membershipId)}}</p>
-        <textarea style="width: 100%; min-height: 200px;" v-if="profiles[destinyMembership.membershipType]">{{profiles[destinyMembership.membershipType]}}</textarea>
+        <textarea readonlystyle="width: 100%; min-height: 200px;" v-if="profiles[destinyMembership.membershipType]">{{profiles[destinyMembership.membershipType]}}</textarea>
       </div>
     </div>
   </div>
