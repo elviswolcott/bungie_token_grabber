@@ -34,7 +34,7 @@
       </div>
     </div>
     <div v-if="manifest">
-      <p>Manifest</p>
+      <p>Manifest locations</p>
       <textarea readonly style="width: 100%;">{{manifest}}</textarea>
     </div>
   </div>
@@ -168,8 +168,7 @@
             return {'error': response.status }
           }
         }).then(function(json) {
-          localStorage.setItem('manifest', JSON.stringify(json));
-          vm.manifest = json;
+          vm.manifest = json.Response;
         }).catch(function() {
           vm.manifest = {'error': 'unable to fetch'}
         });
