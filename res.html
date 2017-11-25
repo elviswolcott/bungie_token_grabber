@@ -29,9 +29,8 @@
         <textarea style="width: 100%; min-height: 200px;">{{destinyMembership}}</textarea>
         <p>Destiny2.GetProfile</p>
         <p style="display: none">{{getProfile(destinyMembership.membershipType, destinyMembership.membershipId)}}</p>
-        <textarea style="width: 100%; min-height: 200px;">{{profiles[destinyMembership.membershipType]}}</textarea>
+        <textarea style="width: 100%; min-height: 200px;" v-if="profiles[destinyMembership.membershipType]">{{profiles[destinyMembership.membershipType]}}</textarea>
       </div>
-      <button @click="getProfile">show destiny 2 profile</button>
     </div>
   </div>
 </body>
