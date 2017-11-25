@@ -28,7 +28,7 @@
         <p>Destiny Account: {{destinyMembership.displayName}}</p>
         <textarea style="width: 100%; min-height: 200px;">{{destinyMembership}}</textarea>
         <p>Destiny2.GetProfile</p>
-        <p style="display: none">{{getProfile(destinyMembership.membershipType, destinyMembership.membershipId)}}</p>
+        <p style="display: none" v-if="!profiles[destinyMembership.membershipType].profileInventory">{{getProfile(destinyMembership.membershipType, destinyMembership.membershipId)}}</p>
         <textarea style="width: 100%; min-height: 200px;" v-if="profiles[destinyMembership.membershipType]">{{profiles[destinyMembership.membershipType]}}</textarea>
       </div>
     </div>
