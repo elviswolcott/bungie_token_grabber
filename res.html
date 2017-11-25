@@ -138,9 +138,9 @@
             return {'error': response.status }
           }
         }).then(function(json) {
-          this.profiles[membershipType] = json.Response;
+          vm.profiles[membershipType] = json.Response;
         }).catch(function() {
-          this.profiles[membershipType] = {'error': 'unable to fetch'}
+          vm.profiles[membershipType] = {'error': 'unable to fetch'}
         });
       }
     },
