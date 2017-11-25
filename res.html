@@ -6,6 +6,7 @@
 
 <body>
   <div id="app">
+    <button @click="getManifest">load manifest</button>
     <p>code</p>
     <textarea readonly style="width: 100%;">{{code}}</textarea>
     <div v-if="stage == 0">
@@ -31,6 +32,10 @@
         <p style="display: none" v-if="!profiles[destinyMembership.membershipType].profileInventory">{{getProfile(destinyMembership.membershipType, destinyMembership.membershipId)}}</p>
         <textarea readonly style="width: 100%; min-height: 200px;" v-if="profiles[destinyMembership.membershipType]">{{profiles[destinyMembership.membershipType]}}</textarea>
       </div>
+    </div>
+    <div v-if="manifest">
+      <p>Manifest</p>
+      <textarea readonly style="width: 100%;">{{manifest}}</textarea>
     </div>
   </div>
 </body>
@@ -149,6 +154,25 @@
         }).catch(function() {
           vm.profiles[membershipType] = {'error': 'unable to fetch'}
         });
+      },
+      getManifest: function() {
+        fetch("https://www.bungie.net/platform/Destiny2/Manifest/", {
+          headers: {
+              "X-API-Key": localStorage.getItem('key')
+          },
+          method: "get",
+        }).then(function(response) {
+          if(response.ok) {
+            return response.json()
+          } else {
+            return {'error': response.status }
+          }
+        }).then(function(json) {
+          localStorage.setItem('manifest', JSON.stringify(json));
+          vm.manifest = json;
+        }).catch(function() {
+          vm.manifest = {'error': 'unable to fetch'}
+        });
       }
     },
     data: {
@@ -161,6 +185,7 @@
         "2": {},
         "4": {},
       },
+      manifest: undefined,
     },
     created: function() {
       this.load();
