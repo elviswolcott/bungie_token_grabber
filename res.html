@@ -106,7 +106,7 @@
           vm.user = {'error': 'unable to fetch'}
         });
       },
-      getProfile: function(membershipType, destinyMembershipId) {
+      getProfile: async function(membershipType, destinyMembershipId) {
         var res;
         var components = [
           100,
@@ -124,7 +124,7 @@
           307,
           308
         ]
-        fetch("https://www.bungie.net/platform/Destiny2/" + membershipType + "/Profile/" + destinyMembershipId + "/?components=" + components.join(), {
+        await fetch("https://www.bungie.net/platform/Destiny2/" + membershipType + "/Profile/" + destinyMembershipId + "/?components=" + components.join(), {
           headers: {
               "X-API-Key": localStorage.getItem('key'),
               "Authorization": this.response.token_type + " " + this.response.access_token
