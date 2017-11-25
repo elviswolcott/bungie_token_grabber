@@ -108,7 +108,23 @@
       },
       getProfile: function(membershipType, destinyMembershipId) {
         var res;
-        fetch("https://www.bungie.net/platform/Destiny2/" + membershipType + "/Profile/" + destinyMembershipId + "/", {
+        var components = [
+          100,
+          102,
+          103,
+          200,
+          201,
+          202,
+          205,
+          300,
+          302,
+          304,
+          305,
+          306,
+          307,
+          308
+        ]
+        fetch("https://www.bungie.net/platform/Destiny2/" + membershipType + "/Profile/" + destinyMembershipId + "/?components=" + components.join(), {
           headers: {
               "X-API-Key": localStorage.getItem('key'),
               "Authorization": this.response.token_type + " " + this.response.access_token
