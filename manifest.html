@@ -1,0 +1,116 @@
+<!Doctype HTML>
+
+<head>
+  <script src="https://vuejs.org/js/vue.js"> </script>
+  <script src="sql.js"></script>
+  <script src="jszip.js"></script>
+</head>
+
+<body>
+  <div id="app">
+    <p>Manifest Response</p>
+    <textarea style="width: 100%; min-height: 400px;">{{manifest}}</textarea>
+    <div v-if="manifest">
+      <p>Manifest Locale</p>
+      <select v-model="lang">
+        <option disabled value="">Please choose a locale</option>
+        <option v-for="(path, key) in manifest.mobileWorldContentPaths">{{key}}</option>
+      </select>
+    </div>
+    <div v-if="lang != ''">
+      <div v-if="loadingFlag">
+        <p>Loading manifest...</p>
+      </div>
+    </div>
+    <div v-if="!loadingFlag">
+      <p>Manifest Query</p>
+      <input v-model="query" type="text" style="width: 100%;"> <button @click="execute">Run</button>
+      <p>Manifest Query Result</p>
+      <textarea style="width: 100%;">{{res}}</textarea>
+    </div>
+  </div>
+  <script>
+    var manifest;
+
+    function loadRemoteSQLite(url) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.responseType = 'arraybuffer';
+
+      xhr.onload = function(e) {
+        var uInt8Array = new Uint8Array(this.response);
+        manifest = new SQL.Database(uInt8Array);
+        vm.loadingFlag = false;
+      };
+      xhr.send();
+    }
+
+    function loadManifest(url) {
+      vm.loadingFlag = true;
+      var SQL = window.SQL;
+      fetch(url)
+      .then(function (response) {
+          if (response.status === 200 || response.status === 0) {
+              return Promise.resolve(response.blob());
+          } else {
+              return Promise.reject(new Error(response.statusText));
+          }
+      })
+      .then(JSZip.loadAsync)
+      .then(function (zip) {
+          console.log(zip) 
+          var name = url.split('/');
+          name = name[name.length - 1];
+          return zip.file(name) //take the actual filename from the url (this basically means it will only work if the file is in a zip with the same name)
+      })
+      .then(function success(file) {
+          return file.async("blob")
+      }, function error(e) {
+      }).then(function(blob) {
+        loadRemoteSQLite(window.URL.createObjectURL(blob)); //not sure why put creating an object url and then loading through that works and directly loading in the blob doesn't
+      });
+    }
+
+    var vm = new Vue({
+      el: '#app',
+      data: {
+        manifest: null,
+        query: '',
+        res: {},
+        lang: '',
+        loadingFlag: false,
+      },
+      methods: {
+        getManifest: function() {
+          fetch("https://www.bungie.net/platform/Destiny2/Manifest/", {
+            headers: {
+                "X-API-Key": localStorage.getItem('key')
+            },
+            method: "get",
+          }).then(function(response) {
+            if(response.ok) {
+              return response.json()
+            } else {
+              return {'error': response.status }
+            }
+          }).then(function(json) {
+            vm.manifest = json.Response;
+          }).catch(function() {
+            vm.manifest = {'error': 'unable to fetch'}
+          });
+        },
+        execute: function() {
+          this.res = manifest.exec(this.query);
+        }
+      },
+      watch: {
+        lang: function() {
+          loadManifest('https://www.bungie.net' + this.manifest.mobileWorldContentPaths[this.lang]);
+        }
+      },
+      created: function() {
+        this.getManifest();
+      }
+    })
+  </script>
+</body>
