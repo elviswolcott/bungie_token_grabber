@@ -9,7 +9,7 @@
 <body>
   <div id="app">
     <p>Manifest Response</p>
-    <textarea style="width: 100%; min-height: 400px;">{{manifest}}</textarea>
+    <textarea readonly style="width: 100%; min-height: 400px;">{{manifest}}</textarea>
     <div v-if="manifest">
       <p>Manifest Locale</p>
       <select v-model="lang">
@@ -24,13 +24,14 @@
     </div>
     <div v-if="!loadingFlag">
       <p>Manifest Query</p>
-      <input v-model="query" type="text" style="width: 100%;"> <button @click="execute">Run</button>
+      <p>Table Names</p>
+      <textarea readonly style="width: 100%; min-height: 300px;">{{tables}}</textarea>
+      <input v-model="query" type="text" style="width: 100%;" @keyup.enter="execute"> <button @click="execute">Run</button>
       <p>Manifest Query Result</p>
-      <textarea style="width: 100%;">{{res}}</textarea>
+      <textarea readonly style="width: 100%; min-height: 300px;">{{res}}</textarea>
     </div>
   </div>
   <script>
-    var manifest;
 
     function loadRemoteSQLite(url) {
       var xhr = new XMLHttpRequest();
@@ -39,7 +40,7 @@
 
       xhr.onload = function(e) {
         var uInt8Array = new Uint8Array(this.response);
-        manifest = new SQL.Database(uInt8Array);
+        vm.sql = new SQL.Database(uInt8Array);
         vm.loadingFlag = false;
       };
       xhr.send();
@@ -67,9 +68,18 @@
           return file.async("blob")
       }, function error(e) {
       }).then(function(blob) {
-        loadRemoteSQLite(window.URL.createObjectURL(blob)); //not sure why put creating an object url and then loading through that works and directly loading in the blob doesn't
+        loadRemoteSQLite(window.URL.createObjectURL(blob)); //not sure why but creating an object url and then loading through that works and directly loading in the blob doesn't
       });
     }
+
+    function getTableList(db) {
+      var temp = db.exec("SELECT `name`   FROM `sqlite_master`   WHERE type='table';");
+      var tables = [];
+      for(index in temp[0].values) {
+        tables.push(temp[0].values[index][0]);
+      }
+      return tables
+    } 
 
     var vm = new Vue({
       el: '#app',
@@ -78,7 +88,8 @@
         query: '',
         res: {},
         lang: '',
-        loadingFlag: false,
+        loadingFlag: true,
+        sql: null,
       },
       methods: {
         getManifest: function() {
@@ -100,12 +111,17 @@
           });
         },
         execute: function() {
-          this.res = manifest.exec(this.query);
+          this.res = this.sql.exec(this.query);
         }
       },
       watch: {
         lang: function() {
           loadManifest('https://www.bungie.net' + this.manifest.mobileWorldContentPaths[this.lang]);
+        }
+      },
+      computed: {
+        tables: function() {
+          return getTableList(this.sql);
         }
       },
       created: function() {
