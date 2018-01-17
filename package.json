@@ -1,0 +1,22 @@
+{
+  "name": "bungie-token-grabber",
+  "version": "1.0.0",
+  "description": "experimenting with the bungieAPI",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elviswolcott/bungie_token_grabber.git"
+  },
+  "author": "Elvis Wolcott",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/elviswolcott/bungie_token_grabber/issues"
+  },
+  "homepage": "https://github.com/elviswolcott/bungie_token_grabber#readme",
+  "dependencies": {
+    "express": "^4.16.2"
+  }
+}
