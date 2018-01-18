@@ -25,6 +25,7 @@
           <a :href="'https://www.bungie.net/en/OAuth/Authorize?client_id=' + id + '&response_type=code'"><button style="width: 400px; height: 100px;">Sign in</button></a>
           <button style="height: 100px;" @click="reset">Reset</button>
           <button style="height: 100px;" @click="exportData">Copy Config Data to Clipboard</button>
+          <input style="border: none; color: white; width: 0px;" type="text" id="dataToCopy">
         </div>
       </div>
     </body>
@@ -42,7 +43,7 @@
         methods: {
           save: function(){ if(localStorage.getItem('id') && localStorage.getItem('apikey') &&  localStorage.getItem('secret')) { this.hasData = true } },
           reset: function() { localStorage.clear(); this.hasData = false; this.id = ''; this.apikey= ''; this.secret = '';},
-          exportData: function() { copy(localStorage) },
+          exportData: function() { document.getElementById('dataToCopy').value = JSON.stringify(localStorage); document.getElementById('dataToCopy').select(); document.execCommand("Copy"); },
           importData: function() { var settings = JSON.parse(this.settings); this.id = settings.id; this.apikey = settings.apikey; this.secret = settings.secret; this.hasData = true; }
         },
         watch: {

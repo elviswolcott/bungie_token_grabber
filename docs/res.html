@@ -26,6 +26,7 @@
       <p>User.UserMembershipData</p>
       <textarea readonly style="width: 100%; min-height: 200px;">{{user}}</textarea>
       <div v-for="(destinyMembership, index) in user.destinyMemberships" :key="destinyMembership.membershipId">
+        <!-- instead each account should be a component to stop the damn redundant calls-->
         <p>Destiny Account: {{destinyMembership.displayName}} ({{ accountTypeToPlaintext(destinyMembership.membershipType )}})</p>
         <textarea readonly style="width: 100%; min-height: 200px;">{{destinyMembership}}</textarea>
         <p>Destiny2.GetProfile for {{destinyMembership.displayName}} ({{ accountTypeToPlaintext(destinyMembership.membershipType )}})</p>
