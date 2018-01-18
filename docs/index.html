@@ -14,14 +14,17 @@
           <p>During development you can also set up a server on localhost and use ngrok to test your dev code by changing this to the appropriate tunnel url. It can be run through npm install and then node server.js</p>
           <p>And the origin should be *</p>
           <p>Please enter you app deatails below</p>
-          <input type="text" v-model="id" placeholder="client_id"></text>
-          <input type="text" v-model="key" placeholder="api key"></text>
-          <input type="text" v-model="secret" placeholder="secret"></text>    
+          <input type="text" v-model="id" placeholder="client_id">
+          <input type="text" v-model="apikey" placeholder="api key">
+          <input type="text" v-model="secret" placeholder="secret">
           <button @click="save">Save</button>
+          <input type="text" style="min-width: 100px;" v-model="settings" placeholder="paste exported data here">
+          <button @click="importData">Import</button>
         </div>
         <div id="pass" v-if="hasData">
           <a :href="'https://www.bungie.net/en/OAuth/Authorize?client_id=' + id + '&response_type=code'"><button style="width: 400px; height: 100px;">Sign in</button></a>
           <button style="height: 100px;" @click="reset">Reset</button>
+          <button style="height: 100px;" @click="exportData">Copy Config Data to Clipboard</button>
         </div>
       </div>
     </body>
@@ -31,27 +34,30 @@
         el: '#app',
         data: {
           id: '',
-          key: '',
+          apikey: '',
           secret: '',
-          hasData: false
+          hasData: false,
+          settings: '',
         },
         methods: {
-          save: function(){ if(localStorage.getItem('id') && localStorage.getItem('key') &&  localStorage.getItem('secret')) { this.hasData = true } },
-          reset: function() { localStorage.clear(); this.hasData = false; this.id = ''; this.key= ''; this.secret = '';}
+          save: function(){ if(localStorage.getItem('id') && localStorage.getItem('apikey') &&  localStorage.getItem('secret')) { this.hasData = true } },
+          reset: function() { localStorage.clear(); this.hasData = false; this.id = ''; this.apikey= ''; this.secret = '';},
+          exportData: function() { copy(localStorage) },
+          importData: function() { var settings = JSON.parse(this.settings); this.id = settings.id; this.apikey = settings.apikey; this.secret = settings.secret; this.hasData = true; }
         },
         watch: {
           id: function(val) {
             localStorage.setItem('id', val);
           },
-          key: function(val) {
-            localStorage.setItem('key', val);
+          apikey: function(val) {
+            localStorage.setItem('apikey', val);
           },
           secret: function(val) {
             localStorage.setItem('secret', val);
           }
         },
         created: function() {
-          if(localStorage.getItem('id') && localStorage.getItem('key') &&  localStorage.getItem('secret')) {
+          if(localStorage.getItem('id') && localStorage.getItem('apikey') &&  localStorage.getItem('secret')) {
             this.id = localStorage.getItem('id');
             this.hasData = true;
           }

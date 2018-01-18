@@ -94,7 +94,7 @@
       getMembershipData: function() {
         fetch("https://www.bungie.net/platform/User/GetMembershipsForCurrentUser/", {
           headers: {
-              "X-API-Key": localStorage.getItem('key'),
+              "X-API-Key": localStorage.getItem('apikey'),
               "Authorization": this.response.token_type + " " + this.response.access_token
           },
           method: "get",
@@ -139,7 +139,7 @@
         ]
         fetch("https://www.bungie.net/platform/Destiny2/" + membershipType + "/Profile/" + destinyMembershipId + "/?components=" + components.join(), {
           headers: {
-              "X-API-Key": localStorage.getItem('key'),
+              "X-API-Key": localStorage.getItem('apikey'),
               "Authorization": this.response.token_type + " " + this.response.access_token
           },
           method: "get",
@@ -154,12 +154,12 @@
         }).catch(function() {
           vm.profiles[membershipType] = {'error': 'unable to fetch'}
         });
-        getManifestLocation();
+        this.getManifestLocation();
       },
       getManifestLocation: function() {
         fetch("https://www.bungie.net/platform/Destiny2/Manifest/", {
           headers: {
-              "X-API-Key": localStorage.getItem('key')
+              "X-API-Key": localStorage.getItem('apikey')
           },
           method: "get",
         }).then(function(response) {
