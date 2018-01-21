@@ -2,6 +2,8 @@
 
 <head>
   <script src="https://vuejs.org/js/vue.js"> </script>
+  <script src="sql.js"></script>
+  <script src="jszip.js"></script>
 </head>  
 
 <body>
@@ -26,22 +28,118 @@
       <p>User.UserMembershipData</p>
       <textarea readonly style="width: 100%; min-height: 200px;">{{user}}</textarea>
       <div v-for="(destinyMembership, index) in user.destinyMemberships" :key="destinyMembership.membershipId">
-        <!-- instead each account should be a component to stop the damn redundant calls-->
-        <p>Destiny Account: {{destinyMembership.displayName}} ({{ accountTypeToPlaintext(destinyMembership.membershipType )}})</p>
-        <textarea readonly style="width: 100%; min-height: 200px;">{{destinyMembership}}</textarea>
-        <p>Destiny2.GetProfile for {{destinyMembership.displayName}} ({{ accountTypeToPlaintext(destinyMembership.membershipType )}})</p>
-        <p style="display: none" v-if="!profiles[destinyMembership.membershipType].profileInventory">{{getProfile(destinyMembership.membershipType, destinyMembership.membershipId)}}</p>
-        <textarea readonly style="width: 100%; min-height: 200px;" v-if="profiles[destinyMembership.membershipType]">{{profiles[destinyMembership.membershipType]}}</textarea>
+        <account :membership="destinyMembership" :response="response"></account>
       </div>
     </div>
     <div v-if="manifest">
       <p>Manifest locations</p>
       <textarea readonly style="width: 100%; min-height: 100px;">{{manifest}}</textarea>
     </div>
+    <div v-if="manifestTable">
+      <p>Item Converter</p>
+      <p>Copy an item from the items section of an an account's data.inventory to see more information about it from the manifest</p>
+      <textarea style="width: 50%; min-height: 100px;" placeholder="paste item here" v-model="rawItem"></textarea><textarea readonly style="width: 50%; min-height: 100px;">{{parsedItem}}</textarea>
+    </div>
   </div>
 </body>
 
+<script type="text/x-template" id="account">
+  <div>
+    <p>Destiny Account: {{membership.displayName}} ({{ accountTypeToPlaintext(membership.membershipType)}})</p>
+    <textarea readonly style="width: 100%; min-height: 200px;">{{membership}}</textarea>
+    <p>Destiny2.GetProfile for {{membership.displayName}} ({{ accountTypeToPlaintext(membership.membershipType)}})</p>
+    <p style="display: none" >{{getProfile(membership.membershipType, membership.membershipId)}}</p>
+    <textarea readonly style="width: 100%; min-height: 200px;">{{profile}}</textarea>
+  </div>
+</script>
+
 <script>
+
+  function loadManifest(url) {
+    var SQL = window.SQL;
+    return new Promise((resolve,reject) => { 
+      fetch(url).then(function (response) {
+        if (response.status === 200 || response.status === 0) {
+          return resolve(response.blob());
+        } else {
+          return reject(new Error(response.statusText));
+        }
+      })
+      .then(JSZip.loadAsync)
+      .then(function (zip) {
+        var name = url.split('/');
+        name = name[name.length - 1];
+        return zip.file(name) //take the actual filename from the url (this basically means it will only work if the file is in a zip with the same name)
+      })
+      .then(function success(file) {
+        return file.async("uint8array")
+      }, function error(e) {
+      }).then(function(file) {
+        resolve(new SQL.Database(file));
+      });
+    })
+  }
+
+  Vue.component('account', {
+    template: '#account',
+    props: ['membership', 'response'],
+    data: function() {
+      return {
+        profile: {},
+      }
+    },
+    created: async function() {
+      this.profile = await this.getProfile(this.membership.membershipType, this.membership.membershipId);
+    },
+    methods: {
+      accountTypeToPlaintext: function(accountType) {
+        var converter = {
+          "1": "Xbox",
+          "2": "PSN",
+          "4": "Blizzard"
+        }
+        return converter[accountType]
+      },
+      getProfile: async function(membershipType, destinyMembershipId) {
+        var components = [
+          100,
+          102,
+          103,
+          200,
+          201,
+          202,
+          205,
+          300,
+          302,
+          304,
+          305,
+          306,
+          307,
+          308
+        ]
+        return new Promise((resolve, reject) => {
+          fetch("https://www.bungie.net/platform/Destiny2/" + membershipType + "/Profile/" + destinyMembershipId + "/?components=" + components.join(), {
+            headers: {
+                "X-API-Key": localStorage.getItem('apikey'),
+                "Authorization": this.response.token_type + " " + this.response.access_token
+            },
+            method: "get",
+          }).then(function(response) {
+            if(response.ok) {
+              return response.json();
+            } else {
+              resolve({'error': response.status })
+            }
+          }).then(function(json) {
+            resolve(json.Response)
+          }).catch(function() {
+            resolve({'error': 'unable to fetch'})
+          });
+        })
+        //this.getManifestLocation();
+      },
+    }
+  })
   var vm = new Vue({
     el: '#app',
     computed: {
@@ -112,68 +210,25 @@
           vm.user = {'error': 'unable to fetch'}
         });
       },
-      accountTypeToPlaintext: function(accountType) {
-        var converter = {
-          "1": "Xbox",
-          "2": "PSN",
-          "4": "Blizzard"
-        }
-        return converter[accountType]
-      },
-      getProfile: function(membershipType, destinyMembershipId) {
-        var res;
-        var components = [
-          100,
-          102,
-          103,
-          200,
-          201,
-          202,
-          205,
-          300,
-          302,
-          304,
-          305,
-          306,
-          307,
-          308
-        ]
-        fetch("https://www.bungie.net/platform/Destiny2/" + membershipType + "/Profile/" + destinyMembershipId + "/?components=" + components.join(), {
-          headers: {
-              "X-API-Key": localStorage.getItem('apikey'),
-              "Authorization": this.response.token_type + " " + this.response.access_token
-          },
-          method: "get",
-        }).then(function(response) {
-          if(response.ok) {
-            return response.json()
-          } else {
-            return {'error': response.status }
-          }
-        }).then(function(json) {
-          vm.profiles[membershipType] = json.Response;
-        }).catch(function() {
-          vm.profiles[membershipType] = {'error': 'unable to fetch'}
-        });
-        this.getManifestLocation();
-      },
       getManifestLocation: function() {
-        fetch("https://www.bungie.net/platform/Destiny2/Manifest/", {
-          headers: {
-              "X-API-Key": localStorage.getItem('apikey')
-          },
-          method: "get",
-        }).then(function(response) {
-          if(response.ok) {
-            return response.json()
-          } else {
-            return {'error': response.status }
-          }
-        }).then(function(json) {
-          vm.manifest = json.Response;
-        }).catch(function() {
-          vm.manifest = {'error': 'unable to fetch'}
-        });
+        return new Promise((resolve,reject) => {
+          fetch("https://www.bungie.net/platform/Destiny2/Manifest/", {
+            headers: {
+                "X-API-Key": localStorage.getItem('apikey')
+            },
+            method: "get",
+          }).then(function(response) {
+            if(response.ok) {
+              return response.json()
+            } else {
+              return {'error': response.status }
+            }
+          }).then(function(json) {
+            resolve(json.Response);
+          }).catch(function() {
+            resolve({'error': 'unable to fetch'});
+          });
+        })
       }
     },
     data: {
@@ -187,9 +242,14 @@
         "4": {},
       },
       manifest: undefined,
+      manifestTable: undefined,
+      rawItem: undefined,
+      parsedItem: {},
     },
-    created: function() {
+    created: async function() {
       this.load();
+      this.manifest = await this.getManifestLocation();
+      this.manifestTable = await loadManifest('https://www.bungie.net' + this.manifest.mobileWorldContentPaths['en']);
     }
   })
 </script>
