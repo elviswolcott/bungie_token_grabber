@@ -50,6 +50,17 @@
   </div>
 </body>
 
+<script type="text/x-template" id="item">
+  <div>
+    <div v-if="inventoryItem && inventoryItem.item" style="border: 1px solid black; padding: 4px; margin: 6px;">
+      <img :src="'https://www.bungie.net' + inventoryItem.item.displayProperties.icon">
+      <p>{{inventoryItem.item.displayProperties.description}}</p>
+      <p>{{inventoryItem.item.displayProperties.name}}</p>
+      <p>x{{inventoryItem.quantity}}</p>
+    </div>
+  </div>
+</script>
+
 <script type="text/x-template" id="account">
   <div>
     <p>Destiny Account: {{membership.displayName}} ({{ accountTypeToPlaintext(membership.membershipType)}})</p>
@@ -57,6 +68,10 @@
     <p>Destiny2.GetProfile for {{membership.displayName}} ({{ accountTypeToPlaintext(membership.membershipType)}})</p>
     <p style="display: none" >{{getProfile(membership.membershipType, membership.membershipId)}}</p>
     <textarea readonly style="width: 100%; min-height: 200px;">{{profile}}</textarea>
+    <div v-if="profile.profileInventory">
+      <p>Inventory Dump:</p>
+      <item v-for="item in profile.profileInventory.data.items" :input="item" :key="item.itemHash"></item>
+    </div>
   </div>
 </script>
 
@@ -111,6 +126,16 @@
       });
     })
   }
+
+  Vue.component('item', {
+    template: '#item',
+    props: ['input'],
+    computed: {
+      inventoryItem: function() {
+        return getItemFromManifest(window.manifestTable, this.input)
+      }
+    }
+  });
 
   Vue.component('account', {
     template: '#account',
