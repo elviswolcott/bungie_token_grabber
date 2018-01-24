@@ -62,14 +62,9 @@
 </script>
 
 <script type="text/x-template" id="character">
-  <div>
+  <div style="border: 1px solid black; padding: 4px; margin: 6px;">
     <img :src="'https://www.bungie.net' + input.characters.data[characterId].emblemBackgroundPath">
-    <p>{{input.characters.data[characterId].baseCharacterLevel}}</p>
-    <p>{{input.characters.data[characterId].light}}</p>
-    <p>{{characterClass}}</p>
-    <p>{{gender}}</p>
-    <p>{{race}}</p>
-
+    <p>{{descriptionString}}</p>
   </div>
 </script>
 
@@ -169,13 +164,19 @@
     props: ['input', 'characterId'],
     computed: {
       characterClass: function() {
-        return getItemFromManifestBucket(window.manifestTable, this.input.characters.data[this.characterId].classHash, 'Class').displayProperties.name
+        var entry = getItemFromManifestBucket(window.manifestTable, this.input.characters.data[this.characterId].classHash, 'Class');
+        return entry.displayProperties.name
       },
       gender: function() {
-        return getItemFromManifestBucket(window.manifestTable, this.input.characters.data[this.characterId].genderHash, 'Gender').displayProperties.name
+        var entry = getItemFromManifestBucket(window.manifestTable, this.input.characters.data[this.characterId].genderHash, 'Gender');
+        return entry.displayProperties.name
       },
       race: function() {
-        return getItemFromManifestBucket(window.manifestTable, this.input.characters.data[this.characterId].raceHash, 'Race').displayProperties.name
+        var entry = getItemFromManifestBucket(window.manifestTable, this.input.characters.data[this.characterId].raceHash, 'Race');
+        return entry.displayProperties.name
+      },
+      descriptionString: function() {
+        return "level " + this.input.characters.data[this.characterId].baseCharacterLevel + " " + this.input.characters.data[this.characterId].light + " " + this.gender + " " + this.race + " " + this.characterClass;
       }
     }
   })
