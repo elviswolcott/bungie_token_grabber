@@ -38,7 +38,7 @@
     <div v-if="manifestTable">
       <p>Item Converter</p>
       <p>Copy an item from the items section of an an account's data.inventory to see more information about it from the manifest</p>
-      <textarea style="width: 50%; min-height: 100px;" placeholder="paste item here" v-model="rawItem"></textarea><textarea readonly style="width: 50%; min-height: 100px;">{{parsedItem}}</textarea>
+      <textarea style="width: 45%; min-height: 100px; display:inline-block;" placeholder="paste item here" v-model="rawItem"></textarea><textarea readonly style="width: 45%; min-height: 100px; display: inline-block;">{{parsedItem}}</textarea>
     </div>
   </div>
 </body>
@@ -54,15 +54,41 @@
 </script>
 
 <script>
+  function getItemFromManifest(manifest, itemHash, bucketHash) {
+    var bucket = window.bucketLookup[bucketHash];
+    if(itemHash > 2147483648) {
+      itemHash -= 4294967296;
+    }
+    
+    return { 
+      data: JSON.parse(manifest.exec('SELECT json FROM "DestinyInventoryItemDefinition" WHERE id=' + itemHash)[0].values[0][0]),
+      bucket: bucket
+    }
+  } 
+
+  //need to take bucket hash and base table to check for item in based on bucket. In future bucks should be compiled into a lookup table to repvent excessive calls to the manifest rhoughout runtime
+
+  function getBucketFromManifest(manifest, hash) {
+    return JSON.parse(manifest.exec('SELECT json FROM "DestinyInventoryBucketDefinition" WHERE id=' + hash)[0].values[0][0]);
+  } 
+
+  function tableToJSON(manifest, tableName) {
+    var pairs = manifest.exec('SELECT * FROM ' + tableName)[0].values;
+    var lookup = {}
+    for(var i = 0; i < pairs.length; i++) {
+      lookup[pairs[i][0]] = JSON.parse(pairs[i][1]);
+    }
+    return lookup
+  }
 
   function loadManifest(url) {
     var SQL = window.SQL;
     return new Promise((resolve,reject) => { 
       fetch(url).then(function (response) {
         if (response.status === 200 || response.status === 0) {
-          return resolve(response.blob());
+          return Promise.resolve(response.blob());
         } else {
-          return reject(new Error(response.statusText));
+          return Promise.reject(new Error(response.statusText));
         }
       })
       .then(JSZip.loadAsync)
@@ -136,7 +162,6 @@
             resolve({'error': 'unable to fetch'})
           });
         })
-        //this.getManifestLocation();
       },
     }
   })
@@ -246,10 +271,24 @@
       rawItem: undefined,
       parsedItem: {},
     },
+    watch: {
+      rawItem: function(item) {
+        if(item) {
+          try {
+            var input = JSON.parse(item)
+          } catch (error) {
+            this.rawItem = undefined
+          }
+          this.parsedItem = getItemFromManifest(window.manifestTable, input.itemHash, input.bucketHash);
+        }
+      }
+    },
     created: async function() {
       this.load();
       this.manifest = await this.getManifestLocation();
-      this.manifestTable = await loadManifest('https://www.bungie.net' + this.manifest.mobileWorldContentPaths['en']);
+      window.manifestTable = await loadManifest('https://www.bungie.net' + this.manifest.mobileWorldContentPaths['en']);
+      this.manifestTable = true;
+      window.bucketLookup = tableToJSON(window.manifestTable, "DestinyInventoryBucketDefinition");
     }
   })
 </script>
