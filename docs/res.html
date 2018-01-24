@@ -61,6 +61,18 @@
   </div>
 </script>
 
+<script type="text/x-template" id="character">
+  <div>
+    <img :src="'https://www.bungie.net' + input.characters.data[characterId].emblemBackgroundPath">
+    <p>{{input.characters.data[characterId].baseCharacterLevel}}</p>
+    <p>{{input.characters.data[characterId].light}}</p>
+    <p>{{characterClass}}</p>
+    <p>{{gender}}</p>
+    <p>{{race}}</p>
+
+  </div>
+</script>
+
 <script type="text/x-template" id="account">
   <div>
     <p>Destiny Account: {{membership.displayName}} ({{ accountTypeToPlaintext(membership.membershipType)}})</p>
@@ -70,7 +82,12 @@
     <textarea readonly style="width: 100%; min-height: 200px;">{{profile}}</textarea>
     <div v-if="profile.profileInventory">
       <p>Inventory Dump:</p>
+      <p>Vault and consumables</p>
       <item v-for="item in profile.profileInventory.data.items" :input="item" :key="item.itemHash"></item>
+      <p>Currencies</p>
+      <item v-for="item in profile.profileCurrencies.data.items" :input="item" :key="item.itemHash"></item>
+      <p>Characters</p>
+      <character v-for="character in profile.profile.data.characterIds" :key="character" :characterId="character" :input="profile"></character>
     </div>
   </div>
 </script>
@@ -86,6 +103,16 @@
     
     return item
   } 
+
+  function getItemFromManifestBucket(manifest, hash, bucket) {
+    if(hash > 2147483648) {
+      hash -= 4294967296;
+    }
+
+    bucket = 'Destiny' + bucket + 'Definition';
+
+    return JSON.parse(manifest.exec('SELECT json FROM "' + bucket + '" WHERE id=' + hash)[0].values[0][0]);
+  }
 
   //need to take bucket hash and base table to check for item in based on bucket. In future bucks should be compiled into a lookup table to repvent excessive calls to the manifest rhoughout runtime
 
@@ -136,6 +163,22 @@
       }
     }
   });
+
+  Vue.component('character', {
+    template: "#character",
+    props: ['input', 'characterId'],
+    computed: {
+      characterClass: function() {
+        return getItemFromManifestBucket(window.manifestTable, this.input.characters.data[this.characterId].classHash, 'Class').displayProperties.name
+      },
+      gender: function() {
+        return getItemFromManifestBucket(window.manifestTable, this.input.characters.data[this.characterId].genderHash, 'Gender').displayProperties.name
+      },
+      race: function() {
+        return getItemFromManifestBucket(window.manifestTable, this.input.characters.data[this.characterId].raceHash, 'Race').displayProperties.name
+      }
+    }
+  })
 
   Vue.component('account', {
     template: '#account',
