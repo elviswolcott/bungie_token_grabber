@@ -65,6 +65,12 @@
   <div style="border: 1px solid black; padding: 4px; margin: 6px;">
     <img :src="'https://www.bungie.net' + input.characters.data[characterId].emblemBackgroundPath">
     <p>{{descriptionString}}</p>
+    <p>Equipment</p>
+    <item v-for="(item, index) in input.characterEquipment.data[characterId].items" :input="item" :key="'equipment' + index"></item>
+    <p>Inventories</p>
+    <item v-for="(item, index) in input.characterInventories.data[characterId].items" :input="item" :key="'inventories' + index"></item>
+    <p>Progression</p>
+    <item v-for="(item, index) in input.characterProgressions.data[characterId].items" :input="item" :key="'progressions' + index"></item>
   </div>
 </script>
 
