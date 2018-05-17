@@ -84,9 +84,9 @@
     <div v-if="profile.profileInventory">
       <p>Inventory Dump:</p>
       <p>Vault and consumables</p>
-      <item v-for="item in profile.profileInventory.data.items" :input="item" :key="item.itemHash"></item>
+      <item v-for="(item, index) in profile.profileInventory.data.items" :input="item" :key="item.itemHash + '' + index"></item>
       <p>Currencies</p>
-      <item v-for="item in profile.profileCurrencies.data.items" :input="item" :key="item.itemHash"></item>
+      <item v-for="(item, index) in profile.profileCurrencies.data.items" :input="item" :key="item.itemHash + '' + index"></item>
       <p>Characters</p>
       <character v-for="character in profile.profile.data.characterIds" :key="character" :characterId="character" :input="profile"></character>
     </div>
